@@ -1,18 +1,34 @@
-from flask import request
+from flask import request, jsonify
 from datetime import datetime
 from winnow import winnow
 
 from __init__ import app
 from models import *
 
-@app.route('/')
-def index():
-    return ''
+import json
 
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
-    return ''
+
+    query = request.args['query']
+
+    fingerprint = list(winnow(query))
+
+    cursor = db.document.find({'fingerprint.digest': fingerprint[0][1]})
+
+    def g(k, v):
+        if k == 'timestamp':
+            return v.isoformat()
+        elif k == '_id':
+            return v['$oid']
+        else:
+            return v
+
+    def f(d):
+        return dict((k, g(k, d[k])) for k in d)
+
+    return json.dumps(map(None, cursor), cls=MongoEncoder)
 
 
 @app.route('/document', methods=['POST'])
@@ -27,16 +43,8 @@ def document_add():
         target=target,
         source_text=source_text,
         target_text=target_text,
+        fingerprint=[dict(offset=v[0], digest=v[1]) for v in winnow(source_text)]
     )
     document_id = db.document.insert(document)
-
-    for wh in winnow(source_text):
-        fingerprint = dict(
-            document_id=document_id,
-            digest=wh[1],
-            offset=wh[0],
-        )
-
-        db.fingerprint.insert(fingerprint)
 
     return ''
