@@ -17,17 +17,6 @@ def search():
 
     cursor = db.document.find({'fingerprint.digest': fingerprint[0][1]})
 
-    def g(k, v):
-        if k == 'timestamp':
-            return v.isoformat()
-        elif k == '_id':
-            return v['$oid']
-        else:
-            return v
-
-    def f(d):
-        return dict((k, g(k, d[k])) for k in d)
-
     return json.dumps(map(None, cursor), cls=MongoEncoder)
 
 
