@@ -35,3 +35,5 @@ class MongoEncoder(JSONEncoder):
 if __name__ == '__main__':
     db.document.create_index([('source', ASCENDING), ('target', ASCENDING)])
     db.document.create_index([('fingerprint.digest', ASCENDING)])
+
+    db.document.create_index([('source_hash', ASCENDING)], unique=True)

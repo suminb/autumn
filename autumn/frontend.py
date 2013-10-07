@@ -7,6 +7,11 @@ from models import *
 
 import json
 
+def sha1(message):
+    import hashlib
+
+    return hashlib.sha1(message.encode('utf-8')).hexdigest()
+
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -14,6 +19,7 @@ def search():
     query = request.args['query']
 
     fingerprint = list(winnow(query))
+    fingerprint_count = len(fingerprint)
 
     cursor = db.document.find({'fingerprint.digest': fingerprint[0][1]})
 
@@ -32,6 +38,8 @@ def document_add():
         target=target,
         source_text=source_text,
         target_text=target_text,
+        source_hash=sha1(source_text),
+        target_hash=sha1(target_text),
         fingerprint=[dict(offset=v[0], digest=v[1]) for v in winnow(source_text)]
     )
     document_id = db.document.insert(document)
